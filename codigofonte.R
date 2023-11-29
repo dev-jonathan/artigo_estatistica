@@ -1,10 +1,6 @@
-rm(list=ls())
+rm(list=ls()) #limpa a memoria do R
 version
 citation()
-#comentarios
-## rm(list=ls()) #limpa a memoria do R
-
-dados_brutos <- read.csv("Global_Education.csv")
 
 # Carregar pacotes necessários
 #################### Carregando pacotes ####################
@@ -24,16 +20,20 @@ if(!require(readxl))
   install.packages("readxl")
 library(readxl)
 
+if(!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
 ##############################################################
 
 
-# Supondo que seu dataframe original seja 'dados_brutos'
 
 # Carregar pacotes necessários
 library(xlsx)
 library(dplyr)
 library(psych)
 library(readxl)
+
+dados_brutos <- read.csv("Global_Education.csv")
 
 # Filtrando as colunas de interesse e renomeando-as
 dados <- select(dados_brutos, 
@@ -82,24 +82,40 @@ confidence_intervals <- lapply(dados[, -1], calculate_confidence_interval)
 
 # ============== PRINTS ==================
 
+#printar todas as medidas para todas as colunas
+for (nome in nomes_variaveis) {
+  pos_central <- get(paste0("PosicaoCentral_", nome))
+  dispersao <- get(paste0("Dispersao_", nome))
+  ic <- confidence_intervals[[nome]]
+  
+  medidas_pos_central <- paste("Média:", pos_central$Media, 
+                               "Mediana:", pos_central$Mediana, 
+                               "Moda:", pos_central$Moda)
+  medidas_dispersao <- paste("Desvio Padrão:", dispersao$DesvioPadrao, 
+                             "Variância:", dispersao$Variancia)
+  
+  print(paste("Medidas para:", nome))
+  print(medidas_pos_central)
+  print(medidas_dispersao)
+  print(paste("Intervalo de Confiança (95%):", ic[1], "-", ic[2]))
+  cat("\n")
+}
+
+#prints par cada coluna separada
 # Taxa de Conclusão do Ensino Fundamental - Masculino
 print("Taxa de Conclusão do Ensino Fundamental - Masculino:")
 print(PosicaoCentral_TaxaConclusaoEF_Masculino)
 print(Dispersao_TaxaConclusaoEF_Masculino)
-
-
 
 # Taxa de Conclusão do Ensino Fundamental - Feminino
 print("Taxa de Conclusão do Ensino Fundamental - Feminino:")
 print(PosicaoCentral_TaxaConclusaoEF_Feminino)
 print(Dispersao_TaxaConclusaoEF_Feminino)
 
-
 # Taxa de Alfabetização de Jovens - Masculino
 print("Taxa de Alfabetização de Jovens - Masculino:")
 print(PosicaoCentral_TaxaAlfabetizacaoJovens_Masculino)
 print(Dispersao_TaxaAlfabetizacaoJovens_Masculino)
-
 
 # Taxa de Alfabetização de Jovens - Feminino
 print("Taxa de Alfabetização de Jovens - Feminino:")
@@ -111,7 +127,6 @@ print("Taxa de Natalidade:")
 print(PosicaoCentral_TaxaNatalidade)
 print(Dispersao_TaxaNatalidade)
 
-
 # Matrícula Bruta no Ensino Fundamental
 print("Matrícula Bruta no Ensino Fundamental:")
 print(PosicaoCentral_MatriculaBrutaEF)
@@ -122,28 +137,31 @@ print("Taxa de Desemprego:")
 print(PosicaoCentral_TaxaDesemprego)
 print(Dispersao_TaxaDesemprego)
 
-
-
-
-
 # Imprimir os intervalos de confiança para todas as colunas
  print(confidence_intervals)
  
- for (nome in nomes_variaveis) {
-   pos_central <- get(paste0("PosicaoCentral_", nome))
-   dispersao <- get(paste0("Dispersao_", nome))
-   ic <- confidence_intervals[[nome]]
-   
-   # Formatação para exibir na mesma linha
-   medidas_pos_central <- paste("Média:", pos_central$Media, 
-                                "Mediana:", pos_central$Mediana, 
-                                "Moda:", pos_central$Moda)
-   medidas_dispersao <- paste("Desvio Padrão:", dispersao$DesvioPadrao, 
-                              "Variância:", dispersao$Variancia)
-   
-   print(paste("Medidas para:", nome))
-   print(medidas_pos_central)
-   print(medidas_dispersao)
-   print(paste("Intervalo de Confiança (95%):", ic[1], "-", ic[2]))
-   cat("\n") # Adiciona uma linha em branco para separar as saídas
- }
+## ================== grafico e teste hipotese para genero ensino fundamental
+ 
+ # Calculando as médias para cada gênero
+ media_masculino <- mean(dados$TaxaConclusaoEF_Masculino, na.rm = TRUE)
+ media_feminino <- mean(dados$TaxaConclusaoEF_Feminino, na.rm = TRUE)
+ 
+ # Criando um dataframe para o gráfico
+ dados_grafico <- data.frame(
+   Genero = c("Masculino", "Feminino"),
+   TaxaConclusaoMedia = c(media_masculino, media_feminino)
+ )
+ 
+ # Criar o gráfico de barras
+ ggplot(dados_grafico, aes(x = Genero, y = TaxaConclusaoMedia, fill = Genero)) +
+   geom_bar(stat = "identity", position = position_dodge()) +
+   ylab("Taxa Média de Conclusão do Ensino Fundamental") +
+   xlab("Gênero") +
+   ggtitle("Comparação da Taxa Média de Conclusão do Ensino Fundamental por Gênero") +
+   theme_minimal()
+ 
+ # Realizar o teste de hipótese (teste t para amostras independentes)
+ teste_t <- t.test(dados$TaxaConclusaoEF_Masculino, dados$TaxaConclusaoEF_Feminino)
+ 
+ # Imprimir os resultados do teste t
+ print(teste_t)
