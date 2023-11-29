@@ -23,9 +23,6 @@ library(readxl)
 if(!require(ggplot2)) install.packages("ggplot2")
 library(ggplot2)
 
-##############################################################
-
-
 
 # Carregar pacotes necessários
 library(xlsx)
@@ -33,9 +30,11 @@ library(dplyr)
 library(psych)
 library(readxl)
 
+##############################################################
+
 dados_brutos <- read.csv("Global_Education.csv")
 
-# Filtrando as colunas de interesse e renomeando-as
+# Filtrando as colunas de interesse e renomeando-as (removendo nulos/0)
 dados <- select(dados_brutos, 
                 Paises_Regioes = Countries_and_areas,
                 TaxaConclusaoEF_Masculino = Completion_Rate_Primary_Male, 
@@ -44,11 +43,18 @@ dados <- select(dados_brutos,
                 TaxaAlfabetizacaoJovens_Feminino = Youth_15_24_Literacy_Rate_Female, 
                 TaxaNatalidade = Birth_Rate, 
                 MatriculaBrutaEF = Gross_Primary_Education_Enrollment, 
-                TaxaDesemprego = Unemployment_Rate)
+                TaxaDesemprego = Unemployment_Rate) %>%
+  filter(TaxaConclusaoEF_Masculino > 0 & TaxaConclusaoEF_Feminino > 0 &
+           TaxaAlfabetizacaoJovens_Masculino > 0 & TaxaAlfabetizacaoJovens_Feminino > 0 &
+           TaxaNatalidade > 0 & MatriculaBrutaEF > 0 & TaxaDesemprego > 0)
+
 
 # Definindo uma função para calcular a moda
 getmode <- function(v) {
+  v <- na.omit(v)  # Remove NA
+  v <- v[v > 0]    # Remove valores 0
   uniqv <- unique(v)
+  if (length(uniqv) == 0) return(NA)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
 
@@ -101,44 +107,14 @@ for (nome in nomes_variaveis) {
   cat("\n")
 }
 
-#prints par cada coluna separada
+#exemplo de prints para cada coluna separada
 # Taxa de Conclusão do Ensino Fundamental - Masculino
-print("Taxa de Conclusão do Ensino Fundamental - Masculino:")
-print(PosicaoCentral_TaxaConclusaoEF_Masculino)
-print(Dispersao_TaxaConclusaoEF_Masculino)
-
-# Taxa de Conclusão do Ensino Fundamental - Feminino
-print("Taxa de Conclusão do Ensino Fundamental - Feminino:")
-print(PosicaoCentral_TaxaConclusaoEF_Feminino)
-print(Dispersao_TaxaConclusaoEF_Feminino)
-
-# Taxa de Alfabetização de Jovens - Masculino
-print("Taxa de Alfabetização de Jovens - Masculino:")
-print(PosicaoCentral_TaxaAlfabetizacaoJovens_Masculino)
-print(Dispersao_TaxaAlfabetizacaoJovens_Masculino)
-
-# Taxa de Alfabetização de Jovens - Feminino
-print("Taxa de Alfabetização de Jovens - Feminino:")
-print(PosicaoCentral_TaxaAlfabetizacaoJovens_Feminino)
-print(Dispersao_TaxaAlfabetizacaoJovens_Feminino)
-
-# Taxa de Natalidade
-print("Taxa de Natalidade:")
-print(PosicaoCentral_TaxaNatalidade)
-print(Dispersao_TaxaNatalidade)
-
-# Matrícula Bruta no Ensino Fundamental
-print("Matrícula Bruta no Ensino Fundamental:")
-print(PosicaoCentral_MatriculaBrutaEF)
-print(Dispersao_MatriculaBrutaEF)
-
-# Taxa de Desemprego
-print("Taxa de Desemprego:")
-print(PosicaoCentral_TaxaDesemprego)
-print(Dispersao_TaxaDesemprego)
+#print("Taxa de Conclusão do Ensino Fundamental - Masculino:")
+#print(PosicaoCentral_TaxaConclusaoEF_Masculino)
+#print(Dispersao_TaxaConclusaoEF_Masculino)
 
 # Imprimir os intervalos de confiança para todas as colunas
- print(confidence_intervals)
+# print(confidence_intervals)
  
 ## ================== grafico e teste hipotese para genero ensino fundamental
  
@@ -165,3 +141,34 @@ print(Dispersao_TaxaDesemprego)
  
  # Imprimir os resultados do teste t
  print(teste_t)
+ 
+ 
+ 
+ 
+ 
+ #================
+ 
+ #Teste de Hipótese para Duas Proporções (Masculino e Feminino)
+
+ p1 <- mean(dados$TaxaConclusaoEF_Masculino / 100)
+ p2 <- mean(dados$TaxaConclusaoEF_Feminino / 100)
+ n1 <- length(dados$TaxaConclusaoEF_Masculino)
+ n2 <- length(dados$TaxaConclusaoEF_Feminino)
+ p <- (p1 * n1 + p2 * n2) / (n1 + n2)
+ Z <- (p1 - p2) / sqrt(p * (1 - p) * (1/n1 + 1/n2))
+ p_value <- 2 * pnorm(-abs(Z)) # two-tailed test
+ 
+
+ # Teste de Hipótese (Taxa de Natalidade: Brasil vs Mundo)
+ 
+ mu_0 <- mean(dados$TaxaNatalidade, na.rm = TRUE)
+ t_value <- (mean(dados$TaxaNatalidade) - mu_0) / (sd(dados$TaxaNatalidade) / sqrt(length(dados$TaxaNatalidade)))
+ p_value <- 2 * pt(-abs(t_value), df=length(dados$TaxaNatalidade) - 1) # two-tailed test
+ 
+ 
+# Teste de Hipótese para Taxa de Desemprego: Brasil vs Mundo
+
+ mu_0 <- mean(dados$TaxaDesemprego, na.rm = TRUE)
+ t_value <- (mean(dados$TaxaDesemprego) - mu_0) / (sd(dados$TaxaDesemprego) / sqrt(length(dados$TaxaDesemprego)))
+ p_value <- 2 * pt(-abs(t_value), df=length(dados$TaxaDesemprego) - 1) # two-tailed test
+ 
