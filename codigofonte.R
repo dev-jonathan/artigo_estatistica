@@ -31,6 +31,7 @@ library(dplyr)
 library(psych)
 library(readxl)
 library(knitr)
+library(ggplot2)
 
 ##############################################################
 
@@ -50,7 +51,7 @@ dados <- select(dados_brutos,
            TaxaAlfabetizacaoJovens_Masculino > 0 & TaxaAlfabetizacaoJovens_Feminino > 0 &
            TaxaNatalidade > 0 & MatriculaBrutaEF > 0 & TaxaDesemprego > 0)
 
-
+dados
 # função para calcular a moda
 getmode <- function(v) {
   v <- na.omit(v)  # Remove NA
@@ -118,20 +119,14 @@ for (nome in nomes_variaveis) {
 # Imprimir os intervalos de confiança para todas as colunas
 # print(confidence_intervals)
  
-## ======teste hipotese para genero ensino fundamental=============
+## ======Parte Inferencial - teste hipotese =============
  
  # teste de hipótese diferenca de media TaxaConclusaoEF feminino Vs masculino (teste t para amostras independentes)
  teste_t <- t.test(dados$TaxaConclusaoEF_Masculino, dados$TaxaConclusaoEF_Feminino)
- 
  # Imprimir os resultados do teste t
  print(teste_t)
  
- # teste de hipótese diferenca de media TaxaConclusaoEF feminino Vs masculino (teste t para amostras independentes)
- teste_t2 <- t.test(dados$TaxaAlfabetizacaoJovens_Masculino , dados$TaxaAlfabetizacaoJovens_Feminino)
- 
- # Imprimir os resultados do teste t
- print(teste_t2)
- 
+
  #Teste de Hipótese para Duas Proporções (Masculino e Feminino)
 
  p1 <- mean(dados$TaxaConclusaoEF_Masculino / 100)
@@ -144,7 +139,14 @@ for (nome in nomes_variaveis) {
 
  print(paste("Valor Z para o teste de duas proporções:", Z))
  print(paste("Valor p para o teste de duas proporções:", p_value))
-
+ 
+ # teste de hipótese diferenca de media TaxaAlfabetizacaoJovens feminino Vs masculino (teste t para amostras independentes)
+ teste_t2 <- t.test(dados$TaxaAlfabetizacaoJovens_Masculino , dados$TaxaAlfabetizacaoJovens_Feminino)
+ 
+ # Imprimir os resultados do teste t
+ print(teste_t2)
+ 
+ 
  # Teste de Hipótese (Taxa de Natalidade: Brasil vs Mundo)
  taxa_natalidade_brasil <- 13.92 # substitua por a taxa de natalidade do Brasil
 
